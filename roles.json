@@ -11,6 +11,12 @@
       "password": "ririn232",
       "role": "owner",
       "telegramId": 1402174935
+    },
+    {
+      "username": "wowo",
+      "password": "wowo232",
+      "role": "reseller",
+      "telegramId": 8516680133
     }
   ]
 }
