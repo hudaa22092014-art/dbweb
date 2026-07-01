@@ -5,6 +5,12 @@
       "password": "admin",
       "telegramId": 8314856280,
       "role": "developer"
+    },
+    {
+      "username": "ririn",
+      "password": "ririn232",
+      "role": "owner",
+      "telegramId": 1402174935
     }
   ]
 }
