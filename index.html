@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vault Manager — Login</title>
+<link rel="stylesheet" href="assets/css/vars.css">
+<style>
+body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
+
+.login-wrap { width:100%; max-width:420px; position:relative; z-index:1; }
+
+.login-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(255,60,60,0.12);
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,60,60,0.06);
+  animation: fade-in-up 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+.lc-top {
+  padding: 36px 24px 28px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.lc-top::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 40%, var(--accent2) 70%, transparent 100%);
+}
+.lc-top::after {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,60,60,0.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.logo-box {
+  width:76px; height:76px; border-radius:20px;
+  border: 2px solid rgba(255,60,60,0.35);
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; margin:0 auto 14px;
+  background: rgba(255,60,60,0.05);
+  box-shadow: 0 0 32px rgba(255,60,60,0.12);
+  animation: pulse 3s ease-in-out infinite;
+  position:relative; z-index:1;
+}
+@keyframes pulse {
+  0%,100%{ box-shadow:0 0 20px rgba(255,60,60,0.1); border-color:rgba(255,60,60,0.3); }
+  50%    { box-shadow:0 0 42px rgba(255,60,60,0.22); border-color:rgba(255,60,60,0.6); }
+}
+
+.brand { font-family:var(--display); font-size:20px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); text-shadow:0 0 28px rgba(255,60,60,0.35); position:relative; z-index:1; }
+.brand-sub { font-size:8.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--text2); margin-top:4px; opacity:.7; }
+
+.lc-body { padding:22px 22px 26px; }
+
+.price-label { font-size:8.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:9px; opacity:.85; }
+.price-box { background:rgba(0,0,0,.22); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:18px; }
+.price-row { display:flex; justify-content:space-between; align-items:center; padding:7px 13px; border-bottom:1px solid rgba(255,255,255,.028); font-size:10px; }
+.price-row:last-child { border-bottom:none; }
+.price-name { color:var(--text2); }
+.price-val  { color:var(--gold); font-weight:600; }
+
+.lc-body .f-group { margin-bottom:10px; }
+.lc-body .btn { margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="lc-top">
+      <div class="logo-box" id="lb-emoji">🔐</div>
+      <div class="brand" id="lb-name">VAULT MANAGER</div>
+      <div class="brand-sub" id="lb-sub">DATABASE SYSTEM</div>
+    </div>
+    <div class="lc-body">
+      <div class="price-label">Harga Akses Script</div>
+      <div class="price-box" id="price-list"></div>
+      <div class="f-group">
+        <label class="f-label">Username / Telegram ID</label>
+        <input class="f-input" id="login-id" placeholder="Username atau ID kamu..." autocomplete="off">
+      </div>
+      <div class="f-group">
+        <label class="f-label">Password</label>
+        <input class="f-input" id="login-pass" type="password" placeholder="Password...">
+      </div>
+      <button class="btn btn-red btn-full" id="login-btn" onclick="doLogin()">LOGIN</button>
+      <div class="status-line" id="login-status" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/state.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/ui.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Redirect jika sudah login
+  STATE.restore()
+  if (STATE.user) { window.location.href = 'dashboard.html'; return }
+
+  // Brand
+  document.getElementById('lb-emoji').textContent = CFG.BRAND.EMOJI
+  document.getElementById('lb-name').textContent  = CFG.BRAND.NAME
+  document.getElementById('lb-sub').textContent   = CFG.BRAND.SUB
+
+  // Price list
+  document.getElementById('price-list').innerHTML = CFG.PRICES.map(p =>
+    `<div class="price-row"><span class="price-name">${p.label}</span><span class="price-val">${p.price}</span></div>`
+  ).join('')
+
+  document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin() })
+})
+
+async function doLogin() {
+  const id   = document.getElementById('login-id').value.trim()
+  const pass = document.getElementById('login-pass').value.trim()
+  if (!id||!pass) { UI.status('login-status','ID & password wajib diisi','err'); return }
+  UI.busy('login-btn', true)
+  UI.status('login-status','')
+  try {
+    const file  = await API.roles()
+    const users = file.data.users || []
+    const match = users.find(u => (u.username===id||String(u.telegramId)===id) && u.password===pass)
+    if (!match) { UI.status('login-status','ID atau password salah','err'); return }
+    STATE.user = match
+    STATE.save()
+    window.location.href = 'dashboard.html'
+  } catch(e) {
+    UI.status('login-status','Error: '+e.message,'err')
+  } finally {
+    UI.busy('login-btn', false, 'LOGIN')
+  }
+}
+</script>
+</body>
+</html>
