@@ -1,1 +1,11 @@
-{ "logs": [] }
+{
+  "logs": [
+    {
+      "who": "Dlii",
+      "role": "developer",
+      "action": "tambah user",
+      "detail": "ririn (owner)",
+      "time": "01 Jul 2026 18.17"
+    }
+  ]
+}
